@@ -1,0 +1,49 @@
+{
+  "name": "cryptovault",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "setup": "node setup.js",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next out node_modules/.cache"
+  },
+  "dependencies": {
+    "@scure/bip32": "^2.0.0",
+    "@scure/bip39": "^2.0.0",
+    "@types/crypto-js": "^4.2.1",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.7",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "crypto-js": "^4.2.0",
+    "ecpair": "^3.0.0",
+    "ethers": "^6.9.0",
+    "framer-motion": "^10.16.5",
+    "js-sha256": "^0.11.1",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.4",
+    "postcss": "^8",
+    "qrcode": "^1.5.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-qr-code": "^2.0.18",
+    "ripemd160": "^2.0.2",
+    "stream-browserify": "^3.0.0",
+    "tailwindcss": "^3.3.0",
+    "tiny-secp256k1": "^2.2.4",
+    "typescript": "^5",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4"
+  }
+}
