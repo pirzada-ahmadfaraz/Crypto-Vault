@@ -101,6 +101,6 @@ The application uses mock APIs for demonstration purposes. In a production envir
 
 ---
 
-**Built with ❤️ by Ahmad Faraz**
+**Built with ❤️ by Pirzada Ahmad Faraz**
 
-© 2025 Ahmad Faraz. All rights reserved.
+© 2025 Pirzada Ahmad Faraz. All rights reserved.
