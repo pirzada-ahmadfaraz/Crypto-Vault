@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'CryptoVault - Multi-Chain Web Wallet',
   description: 'A secure, non-custodial multi-chain wallet for Bitcoin, Litecoin, and Ethereum',
   keywords: 'crypto, wallet, bitcoin, ethereum, litecoin, web3, non-custodial',
-  authors: [{ name: 'CryptoVault Team' }],
+  authors: [{ name: 'Ahmad Faraz' }],
 }
 
 export const viewport = {

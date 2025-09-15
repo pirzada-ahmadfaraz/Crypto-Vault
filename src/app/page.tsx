@@ -356,12 +356,12 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 CryptoVault. Built with security and privacy in mind.
+              © 2024 Ahmad Faraz. Built with security and privacy in mind.
             </div>
             <div className="flex space-x-6 text-sm text-gray-400">
               <a href="#" className="hover:text-primary-400 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-primary-400 transition-colors">Terms of Service</a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">GitHub</a>
+              <a href="https://github.com/pirzada-ahmadfaraz/Crypto-Vault" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">GitHub</a>
             </div>
           </div>
         </div>

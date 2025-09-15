@@ -2,6 +2,13 @@
   "name": "cryptovault",
   "version": "0.1.0",
   "private": true,
+  "author": "Ahmad Faraz",
+  "description": "A secure, non-custodial multi-chain cryptocurrency wallet",
+  "homepage": "https://github.com/pirzada-ahmadfaraz/Crypto-Vault",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pirzada-ahmadfaraz/Crypto-Vault.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

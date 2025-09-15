@@ -79,7 +79,7 @@ src/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/cryptovault.git
+   git clone https://github.com/pirzada-ahmadfaraz/Crypto-Vault.git
    cd cryptovault
    ```
 
@@ -203,4 +203,6 @@ This is educational software. Use at your own risk. The developers are not respo
 
 ---
 
-**Built with ❤️ by the CryptoVault team**
+**Built with ❤️ by Ahmad Faraz**
+
+© 2024 Ahmad Faraz. All rights reserved.
