@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: 'A secure, non-custodial multi-chain wallet for Bitcoin, Litecoin, and Ethereum',
   keywords: 'crypto, wallet, bitcoin, ethereum, litecoin, web3, non-custodial',
   authors: [{ name: 'Ahmad Faraz' }],
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export const viewport = {

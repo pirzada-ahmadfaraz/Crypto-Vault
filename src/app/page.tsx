@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Shield, Wallet, Globe, ArrowRight, Bitcoin, DollarSign, Lock, TrendingUp, TrendingDown } from 'lucide-react'
+import { Shield, Wallet, Globe, ArrowRight, Bitcoin, Lock, TrendingUp, TrendingDown } from 'lucide-react'
 import { hasStoredWallet } from '@/lib/storage'
 import { fetchPricesWithChange } from '@/lib/api'
 
@@ -56,13 +57,22 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navigation */}
-      <nav className="flex justify-between items-center px-6 py-4 backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 backdrop-blur-sm bg-dark-bg/80 border-b border-dark-border/50">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-accent-purple bg-clip-text text-transparent"
+          className="flex items-center space-x-3"
         >
-          CryptoVault
+          <Image
+            src="/logo.png"
+            alt="CryptoVault Logo"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          <span className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-accent-purple bg-clip-text text-transparent">
+            CryptoVault
+          </span>
         </motion.div>
         
         <motion.div
@@ -72,12 +82,12 @@ export default function HomePage() {
         >
           <a href="#features" className="hover:text-primary-400 transition-colors">Features</a>
           <a href="#security" className="hover:text-primary-400 transition-colors">Security</a>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">GitHub</a>
+          <a href="https://github.com/pirzada-ahmadfaraz/Crypto-Vault" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">GitHub</a>
         </motion.div>
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center px-6">
+      <main className="flex-1 flex items-center justify-center px-6 pt-20">
         <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 items-center">
           {/* Left Section */}
           <motion.div
@@ -356,7 +366,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 Ahmad Faraz. Built with security and privacy in mind.
+              © 2025 Ahmad Faraz. Built with security and privacy in mind.
             </div>
             <div className="flex space-x-6 text-sm text-gray-400">
               <a href="#" className="hover:text-primary-400 transition-colors">Privacy Policy</a>
