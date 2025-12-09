@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send, AlertTriangle, Info } from 'lucide-react'
+import { X, Send, AlertTriangle, Info, ArrowRight, Zap, Clock, TrendingUp } from 'lucide-react'
 import { estimateTransactionFee, sendTransaction } from '@/lib/api'
 import { useWalletStore } from '@/store/wallet'
 
@@ -44,9 +44,8 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
   const estimateFee = async () => {
     try {
       setLoading(true)
-      
+
       if (currency === 'LTC') {
-        // Fixed fee for LTC: $0.01 worth of LTC
         const prices = await import('@/lib/api').then(m => m.fetchPrices())
         const ltcPrice = prices.LTC
         const feeInLTC = (0.01 / ltcPrice).toFixed(8)
@@ -78,11 +77,11 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
 
     setSending(true)
     setError('')
-    
+
     try {
       const fromAddress = wallet.addresses[currency.toLowerCase() as keyof typeof wallet.addresses]
       const privateKey = wallet.privateKeys[currency.toLowerCase() as keyof typeof wallet.privateKeys]
-      
+
       const result = await sendTransaction(
         fromAddress,
         recipientAddress,
@@ -92,11 +91,11 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
       )
 
       if (result.success) {
-        setSuccess(`✅ Transaction completed!... (Check history for full details)`)
+        setSuccess(`✅ Transaction completed!`)
         setTimeout(() => {
           onClose()
           resetForm()
-        }, 5000) // Increased time to read the message
+        }, 5000)
       } else {
         setError(result.error || 'Transaction failed')
       }
@@ -128,7 +127,7 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
   const calculateUSDValue = (cryptoAmount: string) => {
     const price = prices?.[currency]
     if (!price || !cryptoAmount) return '$0.00'
-    
+
     const value = parseFloat(cryptoAmount) * price
     return `$${value.toFixed(2)}`
   }
@@ -136,7 +135,7 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
   const convertUSDToCrypto = (usdAmount: string) => {
     const price = prices?.[currency]
     if (!price || !usdAmount) return '0'
-    
+
     const cryptoValue = parseFloat(usdAmount) / price
     return cryptoValue.toFixed(currency === 'BTC' ? 8 : currency === 'LTC' ? 8 : 6)
   }
@@ -144,7 +143,7 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
   const convertCryptoToUSD = (cryptoAmount: string) => {
     const price = prices?.[currency]
     if (!price || !cryptoAmount) return '0'
-    
+
     const usdValue = parseFloat(cryptoAmount) * price
     return usdValue.toFixed(2)
   }
@@ -157,285 +156,209 @@ export default function SendModal({ isOpen, onClose, selectedCurrency = 'BTC' }:
   }
 
   const feeSpeedLabels = {
-    slow: { label: 'Slow', time: '~30-60 min', multiplier: 1 },
-    standard: { label: 'Standard', time: '~10-20 min', multiplier: 1.5 },
-    fast: { label: 'Fast', time: '~2-5 min', multiplier: 2 },
+    slow: { label: 'Slow', time: '~60 min', icon: Clock },
+    standard: { label: 'Standard', time: '~20 min', icon: TrendingUp },
+    fast: { label: 'Fast', time: '~5 min', icon: Zap },
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="glass-panel w-full max-w-lg rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Send className="w-5 h-5 text-primary-400" />
-                Send Crypto
-              </h2>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Gradient Accent */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-neon-purple to-neon-pink" />
 
-            {success ? (
-              /* Success State */
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-8"
-              >
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Send className="w-8 h-8 text-green-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-green-400 mb-2">Transaction Sent!</h3>
-                <p className="text-gray-400 text-sm">{success}</p>
-              </motion.div>
-            ) : (
-              /* Main Form */
-              <div className="space-y-4">
-                {/* Network Selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Network</label>
-                  <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value as 'BTC' | 'LTC' | 'ETH')}
-                    className="w-full p-3 bg-dark-bg border border-dark-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+            <div className="p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary-500/20 flex items-center justify-center text-primary-400">
+                    <Send className="w-5 h-5" />
+                  </div>
+                  Send Assets
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {success ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/10">
+                    <Send className="w-10 h-10 text-green-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Transaction Sent!</h3>
+                  <p className="text-gray-400 mb-8">{success}</p>
+                  <button
+                    onClick={onClose}
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold transition-colors"
                   >
-                    <option value="BTC">Bitcoin (BTC)</option>
-                    <option value="ETH">Ethereum (ETH)</option>
-                    <option value="LTC">Litecoin (LTC)</option>
-                  </select>
-                </div>
-
-                {/* Available Balance */}
-                {balances[currency] && (
-                  <div className="bg-dark-bg rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Available Balance</span>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {balances[currency].balance} {currency}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {calculateUSDValue(balances[currency].balance)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Recipient Address */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Recipient Address</label>
-                  <input
-                    type="text"
-                    value={recipientAddress}
-                    onChange={(e) => {
-                      setRecipientAddress(e.target.value)
-                      setError('')
-                    }}
-                    className="w-full p-3 bg-dark-bg border border-dark-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors font-mono text-sm"
-                    placeholder={`Enter ${currency} address`}
-                  />
-                </div>
-
-                {/* Amount */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Amount</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      value={amount}
-                      onChange={(e) => {
-                        setAmount(e.target.value)
-                        setError('')
-                      }}
-                      className="w-full p-3 bg-dark-bg border border-dark-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors pr-20"
-                      placeholder="0.00"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setAmountInUSD(!amountInUSD)}
-                      className="absolute right-3 top-3 text-primary-400 hover:text-primary-300 text-sm font-medium transition-colors"
-                    >
-                      {amountInUSD ? 'USD' : currency}
-                    </button>
-                  </div>
-                  {amount && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {amountInUSD ? (
-                        `≈ ${convertUSDToCrypto(amount)} ${currency}`
-                      ) : (
-                        `≈ ${calculateUSDValue(amount)}`
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                {/* Fee Selection - Only show for BTC and ETH, LTC has fixed fee */}
-                {currency !== 'LTC' && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Transaction Speed</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(Object.keys(feeSpeedLabels) as FeeSpeed[]).map((speed) => (
+                    Close
+                  </button>
+                </motion.div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Network Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-1">Select Network</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['BTC', 'ETH', 'LTC'].map((c) => (
                         <button
-                          key={speed}
-                          onClick={() => setFeeSpeed(speed)}
-                          className={`p-3 rounded-lg border text-center transition-colors ${
-                            feeSpeed === speed
-                              ? 'border-primary-500 bg-primary-500/10'
-                              : 'border-dark-border hover:border-gray-600'
-                          }`}
+                          key={c}
+                          onClick={() => setCurrency(c as any)}
+                          className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all duration-300 ${currency === c
+                              ? 'bg-primary-500/20 border-primary-500/50 text-white shadow-glow'
+                              : 'bg-charcoal/50 border-white/5 text-gray-500 hover:bg-charcoal hover:text-gray-300'
+                            }`}
                         >
-                          <div className="font-medium text-sm">
-                            {feeSpeedLabels[speed].label}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {feeSpeedLabels[speed].time}
-                          </div>
+                          <span className="font-bold">{c}</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                )}
-                
-                {/* Fixed LTC Fee Notice */}
-                {currency === 'LTC' && (
-                  <div className="bg-dark-bg rounded-lg p-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Network Fee (Fixed)</span>
-                      <span className="text-primary-400 font-medium">$0.01</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Litecoin transactions use a fixed fee of $0.01
-                    </p>
-                  </div>
-                )}
 
-                {/* Fee Estimate */}
-                {estimatedFee && (
-                  <div className="bg-dark-bg rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Network Fee:</span>
-                      <span>{estimatedFee} {currency}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Total Amount:</span>
-                      <span className="font-medium">{calculateTotal()} {currency}</span>
-                    </div>
-                    <div className="border-t border-dark-border pt-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Total (USD):</span>
-                        <span className="font-medium text-primary-400">
-                          {calculateUSDValue(calculateTotal())}
+                  {/* Recipient Input */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-1">Recipient Address</label>
+                    <input
+                      type="text"
+                      value={recipientAddress}
+                      onChange={(e) => {
+                        setRecipientAddress(e.target.value)
+                        setError('')
+                      }}
+                      className="w-full p-4 bg-charcoal/50 border border-white/10 rounded-xl focus:border-primary-500/50 focus:bg-charcoal focus:outline-none transition-all font-mono text-sm placeholder:text-gray-600 text-white"
+                      placeholder={`Enter ${currency} address`}
+                    />
+                  </div>
+
+                  {/* Amount Input */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-sm font-medium text-gray-400">Amount</label>
+                      {balances[currency] && (
+                        <span className="text-xs text-primary-400 cursor-pointer hover:underline" onClick={() => {
+                          // Logic to set max amount - keeping simple for UI demo
+                          setAmount(balances[currency].balance)
+                        }}>
+                          Max: {balances[currency].balance}
                         </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                          setAmount(e.target.value)
+                          setError('')
+                        }}
+                        className="w-full p-4 bg-charcoal/50 border border-white/10 rounded-xl focus:border-primary-500/50 focus:bg-charcoal focus:outline-none transition-all text-xl font-bold pr-24 placeholder:text-gray-700 text-white"
+                        placeholder="0.00"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAmountInUSD(!amountInUSD)}
+                        className="absolute right-2 top-2 bottom-2 px-3 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-semibold transition-colors text-gray-300"
+                      >
+                        {amountInUSD ? 'USD' : currency}
+                      </button>
+                    </div>
+                    <div className="flex justify-end px-1">
+                      <p className="text-xs text-gray-500">
+                        ≈ {amountInUSD
+                          ? `${convertUSDToCrypto(amount)} ${currency}`
+                          : calculateUSDValue(amount)
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Fee Selection */}
+                  {currency !== 'LTC' && (
+                    <div className="space-y-3 pt-2">
+                      <label className="text-sm font-medium text-gray-400 ml-1">Transaction Speed</label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {(Object.keys(feeSpeedLabels) as FeeSpeed[]).map((speed) => {
+                          const Icon = feeSpeedLabels[speed].icon
+                          return (
+                            <button
+                              key={speed}
+                              onClick={() => setFeeSpeed(speed)}
+                              className={`p-3 rounded-xl border text-center transition-all duration-300 flex flex-col items-center gap-1 ${feeSpeed === speed
+                                  ? 'bg-primary-500/20 border-primary-500/50 text-primary-400'
+                                  : 'bg-charcoal/30 border-white/5 hover:bg-charcoal/50 text-gray-500'
+                                }`}
+                            >
+                              <Icon className="w-4 h-4 mb-1" />
+                              <span className="text-xs font-semibold">{feeSpeedLabels[speed].label}</span>
+                              <span className="text-[10px] opacity-70">{feeSpeedLabels[speed].time}</span>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Error */}
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-2"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
-                    <span className="text-sm text-red-400">{error}</span>
-                  </motion.div>
-                )}
-
-                {/* Transaction Mode Warning */}
-                {process.env.NEXT_PUBLIC_ENABLE_REAL_TX === 'true' ? (
-                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-orange-200">
-                      <p className="font-bold mb-2">🔥 REAL TRANSACTION MODE ENABLED</p>
-                      <p className="mb-2">
-                        This will send ACTUAL {currency} to the specified address. 
-                        Transactions are irreversible and cannot be undone!
-                      </p>
-                      <p className="text-xs text-orange-300">
-                        Ensure you have sufficient balance and the recipient address is correct.
-                      </p>
+                  {/* Fee Summary */}
+                  {estimatedFee && (
+                    <div className="bg-charcoal/40 rounded-xl p-4 border border-white/5 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Network Fee</span>
+                        <span className="text-gray-300">{estimatedFee} {currency}</span>
+                      </div>
+                      <div className="border-t border-white/5 pt-2 flex justify-between items-center">
+                        <span className="text-gray-400 font-medium">Total</span>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-white">{calculateTotal()} {currency}</p>
+                          <p className="text-xs text-gray-500">≈ {calculateUSDValue(calculateTotal())}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
-                    <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-200">
-                      <p className="font-bold mb-2">🧪 SIMULATION MODE</p>
-                      <p className="mb-2">
-                        Currently in demo mode. To enable real transactions, add 
-                        <code className="mx-1 px-1 bg-blue-500/20 rounded">NEXT_PUBLIC_ENABLE_REAL_TX=true</code> 
-                        to your .env file.
-                      </p>
-                      <p className="text-xs text-blue-300">
-                        Simulation provides safe testing without moving real funds.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Warning */}
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
-                  <Info className="w-4 h-4 text-amber-400 mt-0.5" />
-                  <div className="text-xs text-amber-200">
-                    <p className="font-medium mb-1">Important:</p>
-                    <p>
-                      Double-check the recipient address format. Real transactions cannot be reversed once confirmed.
-                    </p>
+                  {/* Errors & Notices */}
+                  {error && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3">
+                      <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                      <p className="text-sm text-red-400">{error}</p>
+                    </div>
+                  )}
+
+                  <div className="pt-4 flex gap-4">
+                    <button
+                      onClick={onClose}
+                      className="flex-1 py-4 rounded-xl border border-white/10 hover:bg-white/5 font-semibold transition-colors text-gray-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleSend}
+                      disabled={sending || loading || !amount || !recipientAddress}
+                      className="flex-[2] py-4 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white rounded-xl font-bold shadow-lg shadow-primary-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {sending ? 'Processing...' : 'Confirm Transaction'}
+                      {!sending && <ArrowRight className="w-4 h-4" />}
+                    </motion.button>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={onClose}
-                    className="flex-1 py-3 border border-gray-600 hover:bg-gray-800 rounded-lg font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSend}
-                    disabled={
-                      sending ||
-                      loading ||
-                      !recipientAddress ||
-                      !amount ||
-                      parseFloat(getCryptoAmount()) <= 0 ||
-                      !estimatedFee
-                    }
-                    className="flex-1 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    {sending ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Send Transaction
-                      </>
-                    )}
-                  </motion.button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </motion.div>
         </div>
       )}

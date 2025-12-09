@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, Copy, Check } from 'lucide-react'
+import { X, Download, Copy, Check, Share2 } from 'lucide-react'
 import { useWalletStore } from '@/store/wallet'
 import QRCode from 'react-qr-code'
 
@@ -12,14 +12,14 @@ interface ReceiveModalProps {
   selectedCurrency?: 'BTC' | 'LTC' | 'ETH'
 }
 
-export default function ReceiveModal({ 
-  isOpen, 
-  onClose, 
-  selectedCurrency = 'BTC' 
+export default function ReceiveModal({
+  isOpen,
+  onClose,
+  selectedCurrency = 'BTC'
 }: ReceiveModalProps) {
   const [currency, setCurrency] = useState<'BTC' | 'LTC' | 'ETH'>(selectedCurrency)
   const [copied, setCopied] = useState(false)
-  
+
   const { wallet } = useWalletStore()
 
   useEffect(() => {
@@ -77,154 +77,114 @@ export default function ReceiveModal({
     }
   }
 
-  const address = getAddress()
-
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-dark-card rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-dark-border mx-4"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            className="glass-panel w-full max-w-lg rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Download className="w-5 h-5 text-primary-400" />
-                Receive Crypto
-              </h2>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Decorative Background */}
+            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-primary-500/10 to-transparent pointer-events-none" />
 
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Select Network</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value as 'BTC' | 'LTC' | 'ETH')}
-                  className="w-full p-3 bg-dark-bg border border-dark-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+            <div className="p-8 relative">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent-purple/20 flex items-center justify-center text-accent-purple">
+                    <Download className="w-5 h-5" />
+                  </div>
+                  Receive Crypto
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300"
                 >
-                  <option value="BTC">Bitcoin (BTC)</option>
-                  <option value="ETH">Ethereum (ETH)</option>
-                  <option value="LTC">Litecoin (LTC)</option>
-                </select>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-primary-500 to-accent-purple rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-white">
-                      {getCurrencyIcon(currency)}
-                    </span>
+              <div className="space-y-6">
+                {/* Currency Selector */}
+                <div className="flex gap-2 p-1 bg-charcoal/50 rounded-xl overflow-hidden">
+                  {['BTC', 'ETH', 'LTC'].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCurrency(c as any)}
+                      className={`flex-1 py-2 rounded-lg font-semibold transition-all duration-300 ${currency === c
+                          ? 'bg-primary-500 text-white shadow-lg'
+                          : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-medium text-gray-300">Scan to deposit <span className="text-white font-bold">{getCurrencyName(currency)}</span></h3>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest">Only send {currency} to this address</p>
+                </div>
+
+                {/* QR Code Container */}
+                <div className="flex justify-center">
+                  <div className="p-4 bg-white rounded-2xl shadow-xl shadow-white/5 mx-auto">
+                    {getAddress() ? (
+                      <QRCode
+                        size={200}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        value={getAddress()}
+                        viewBox={`0 0 200 200`}
+                      />
+                    ) : (
+                      <div className="w-[200px] h-[200px] bg-gray-100 animate-pulse rounded-lg" />
+                    )}
                   </div>
-                  <h3 className="text-lg font-semibold">{getCurrencyName(currency)}</h3>
-                  <p className="text-sm text-gray-400">Send only {currency} to this address</p>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-2xl p-6 flex items-center justify-center">
-                <div className="text-center">
-                  {address ? (
-                    <QRCode
-                      size={180}
-                      style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                      value={address}
-                      viewBox={`0 0 180 180`}
-                    />
-                  ) : (
-                    <div className="w-45 h-45 bg-gray-200 rounded flex items-center justify-center">
-                      <span className="text-gray-500">Loading...</span>
-                    </div>
-                  )}
-                  <p className="text-sm font-medium text-gray-700 mt-3">QR Code</p>
-                  <p className="text-xs text-gray-500">Scan to get address</p>
-                </div>
-              </div>
+                {/* Address Box */}
+                <div className="bg-charcoal/50 border border-white/5 rounded-2xl p-4 space-y-3">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Wallet Address</span>
+                    {copied && <span className="text-xs text-green-400 font-bold animate-pulse">Copied to clipboard!</span>}
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Your {currency} Address</label>
-                <div className="bg-dark-bg border border-dark-border rounded-lg p-4">
-                  <p className="font-mono text-sm break-all text-center mb-3">
-                    {address}
+                  <p className="font-mono text-sm break-all text-center text-gray-300 bg-black/20 p-3 rounded-lg border border-white/5 select-all">
+                    {getAddress() || 'Loading address...'}
                   </p>
-                  
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+
+                  <div className="flex gap-3">
+                    <button
                       onClick={copyAddress}
-                      className="flex-1 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                      className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group"
                     >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy
-                        </>
-                      )}
-                    </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 group-hover:text-primary-400 transition-colors" />}
+                      <span>Copy</span>
+                    </button>
+                    <button
                       onClick={downloadQR}
-                      className="flex-1 py-2 border border-accent-purple text-accent-purple hover:bg-accent-purple hover:text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                      className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all flex items-center justify-center gap-2 group"
                     >
-                      <Download className="w-4 h-4" />
-                      Save
-                    </motion.button>
+                      <Share2 className="w-4 h-4 group-hover:text-primary-400 transition-colors" />
+                      <span>Share</span>
+                    </button>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-white">!</span>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3">
+                  <div className="w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 text-blue-400 mt-0.5">
+                    <span className="text-xs font-bold">i</span>
                   </div>
-                  <div className="text-sm text-amber-200">
-                    <p className="font-medium mb-1">Important Notice:</p>
-                    <p>
-                      Only send {getCurrencyName(currency)} ({currency}) to this address. 
-                      Sending other cryptocurrencies may result in permanent loss of funds.
-                    </p>
-                  </div>
+                  <p className="text-xs text-blue-200/80 leading-relaxed">
+                    Transactions usually take 10-30 minutes to confirm.
+                    Ensure you are sending via the correct network.
+                  </p>
                 </div>
-              </div>
 
-              <div className="bg-dark-bg rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Network:</span>
-                  <span>{getCurrencyName(currency)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Confirmations:</span>
-                  <span>{currency === 'BTC' ? '3-6' : currency === 'ETH' ? '12-20' : '6-12'} blocks</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Estimated Time:</span>
-                  <span>
-                    {currency === 'BTC' ? '30-60 min' : currency === 'ETH' ? '5-15 min' : '15-30 min'}
-                  </span>
-                </div>
               </div>
-
-              <button
-                onClick={onClose}
-                className="w-full py-3 border border-gray-600 hover:bg-gray-800 rounded-lg font-medium transition-colors"
-              >
-                Close
-              </button>
             </div>
           </motion.div>
         </div>
