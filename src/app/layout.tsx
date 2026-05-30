@@ -1,13 +1,31 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Bricolage_Grotesque, Schibsted_Grotesk, Spline_Sans_Mono } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  adjustFontFallback: false,
+})
+
+const body = Schibsted_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+  adjustFontFallback: false,
+})
+
+const mono = Spline_Sans_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'CryptoVault - Multi-Chain Web Wallet',
-  description: 'A secure, non-custodial multi-chain wallet for Bitcoin, Litecoin, and Ethereum',
-  keywords: 'crypto, wallet, bitcoin, ethereum, litecoin, web3, non-custodial, secure, defi',
+  title: 'CryptoVault — Self-Custody, Engineered',
+  description: 'A secure, non-custodial multi-chain wallet for Bitcoin, Litecoin, and Ethereum. Your keys, your coins.',
+  keywords: 'crypto, wallet, bitcoin, ethereum, litecoin, web3, non-custodial, secure, self-custody, defi',
   authors: [{ name: 'Ahmad Faraz' }],
   icons: {
     icon: '/logo.png',
@@ -19,7 +37,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#050505',
+  themeColor: '#0b0a08',
 }
 
 export default function RootLayout({
@@ -29,18 +47,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-obsidian text-dark-text min-h-screen relative overflow-x-hidden`}>
-        {/* Global Background Effects */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-900/10 rounded-full blur-[120px] mix-blend-screen animate-float" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-purple/10 rounded-full blur-[120px] mix-blend-screen animate-float" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-obsidian/50 radial-gradient-overlay opacity-50" />
+      <body
+        className={`${body.variable} ${display.variable} ${mono.variable} font-sans grain bg-obsidian text-ink min-h-screen relative overflow-x-hidden antialiased`}
+      >
+        {/* Atmospheric background */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          {/* hairline grid, masked toward top */}
+          <div
+            className="grid-bg absolute inset-x-0 top-0 h-[120vh]"
+            style={{
+              WebkitMaskImage: 'radial-gradient(ellipse 75% 55% at 50% 0%, #000 25%, transparent 78%)',
+              maskImage: 'radial-gradient(ellipse 75% 55% at 50% 0%, #000 25%, transparent 78%)',
+            }}
+          />
+          {/* warm gold bloom */}
+          <div className="absolute top-[-18%] left-1/2 -translate-x-1/2 w-[60rem] h-[40rem] rounded-full bg-gold-500/[0.07] blur-[150px]" />
+          <div className="absolute bottom-[-15%] right-[-10%] w-[38rem] h-[38rem] rounded-full bg-gold-700/[0.06] blur-[140px]" />
+          {/* deepening vignette */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.55)_100%)]" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10">
-          {children}
-        </div>
+        <div className="relative z-10">{children}</div>
       </body>
     </html>
   )

@@ -3,46 +3,38 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Copy, Download, Check, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Copy, Download, Check, AlertTriangle, Eye, EyeOff, Shield, KeyRound, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { generateWallet, restoreWalletFromMnemonic, encryptWallet, validatePasswordStrength } from '@/lib/crypto'
 import { storeEncryptedWallet } from '@/lib/storage'
 import { useWalletStore } from '@/store/wallet'
 
-interface StepProps {
-  currentStep: number
-  totalSteps: number
-}
+const STEPS = ['Generate', 'Secure', 'Confirm']
+const ease = [0.16, 1, 0.3, 1] as const
 
-const StepIndicator = ({ currentStep, totalSteps }: StepProps) => {
+function StepRail({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-center mb-8">
-      <div className="flex items-center space-x-4">
-        {Array.from({ length: totalSteps }, (_, index) => {
-          const stepNumber = index + 1
-          const isActive = stepNumber === currentStep
-          const isCompleted = stepNumber < currentStep
-          
-          return (
-            <div key={stepNumber} className="flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                  isCompleted
-                    ? 'bg-primary-500 text-white'
-                    : isActive
-                    ? 'bg-primary-500 text-white animate-pulse-glow'
-                    : 'bg-gray-700 text-gray-400'
-                }`}
-              >
-                {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
+    <div className="flex items-center justify-center gap-3 mb-10">
+      {STEPS.map((label, i) => {
+        const n = i + 1
+        const done = n < current
+        const active = n === current
+        return (
+          <div key={label} className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mono-label text-[0.55rem] transition-all ${
+                done ? 'bg-gold-sheen text-[#1a1408]'
+                  : active ? 'border border-gold-400 text-gold-300'
+                    : 'border border-white/10 text-ink-faint'
+              }`}>
+                {done ? <Check className="w-3.5 h-3.5" /> : n}
               </div>
-              {stepNumber < totalSteps && (
-                <div className={`w-12 h-0.5 mx-2 ${isCompleted ? 'bg-primary-500' : 'bg-gray-700'}`} />
-              )}
+              <span className={`mono-label text-[0.55rem] hidden sm:block ${active ? 'text-ink' : 'text-ink-faint'}`}>{label}</span>
             </div>
-          )
-        })}
-      </div>
+            {n < STEPS.length && <div className={`w-8 h-px ${done ? 'bg-gold-500' : 'bg-white/10'}`} />}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -53,16 +45,12 @@ export default function CreateWalletPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [confirmations, setConfirmations] = useState({
-    writtenDown: false,
-    understood: false,
-  })
+  const [confirmations, setConfirmations] = useState({ writtenDown: false, understood: false })
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  
+
   const router = useRouter()
-  const setWallet = useWalletStore(state => state.setWallet)
-  
+  const setWallet = useWalletStore((s) => s.setWallet)
   const passwordStrength = validatePasswordStrength(password)
 
   const generateNewWallet = async () => {
@@ -76,7 +64,7 @@ export default function CreateWalletPage() {
       } finally {
         setLoading(false)
       }
-    }, 1000)
+    }, 900)
   }
 
   const copyToClipboard = () => {
@@ -96,48 +84,23 @@ export default function CreateWalletPage() {
   }
 
   const nextStep = () => {
-    if (currentStep === 1 && mnemonic.length === 0) {
-      generateNewWallet()
-      return
-    }
-    
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    }
+    if (currentStep === 1 && mnemonic.length === 0) { generateNewWallet(); return }
+    if (currentStep < 3) setCurrentStep(currentStep + 1)
   }
-
-  const previousStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const previousStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1) }
 
   const finishWalletCreation = async () => {
     if (!passwordStrength.isValid || password !== confirmPassword) return
-    
     setLoading(true)
-    
     try {
-      // Restore wallet from mnemonic to get all data
       const walletData = await restoreWalletFromMnemonic(mnemonic.join(' '))
-      
-      if (!walletData) {
-        throw new Error('Failed to restore wallet from mnemonic')
-      }
-      
-      // Encrypt and store wallet
+      if (!walletData) throw new Error('Failed to restore wallet from mnemonic')
       const encryptedWallet = encryptWallet(walletData, password)
       const stored = storeEncryptedWallet(encryptedWallet)
-      
-      if (stored) {
-        setWallet(walletData)
-        router.push('/dashboard')
-      } else {
-        throw new Error('Failed to store wallet')
-      }
+      if (stored) { setWallet(walletData); router.push('/dashboard') }
+      else throw new Error('Failed to store wallet')
     } catch (error) {
       console.error('Failed to create wallet:', error)
-      // Handle error
     } finally {
       setLoading(false)
     }
@@ -145,264 +108,158 @@ export default function CreateWalletPage() {
 
   const isStep2Valid = passwordStrength.isValid && password === confirmPassword
   const isStep3Valid = confirmations.writtenDown && confirmations.understood
+  const strengthLabel = passwordStrength.score <= 2 ? 'Weak' : passwordStrength.score <= 4 ? 'Medium' : 'Strong'
+  const strengthColor = passwordStrength.score <= 2 ? 'bg-down' : passwordStrength.score <= 4 ? 'bg-gold-400' : 'bg-up'
+  const strengthText = passwordStrength.score <= 2 ? 'text-down' : passwordStrength.score <= 4 ? 'text-gold-300' : 'text-up'
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
-        {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+          <Link href="/" className="inline-flex items-center gap-2 mono-label text-[0.6rem] text-ink-faint hover:text-ink mb-6 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to home
           </Link>
-          <h1 className="text-3xl font-bold text-primary-400 mb-2">Create New Wallet</h1>
-          <p className="text-gray-400">Set up your secure multi-chain wallet</p>
+          <h1 className="font-display text-4xl font-bold">Create your <span className="gold-text">vault</span></h1>
+          <p className="text-ink-dim mt-2">Three steps to fully self-custodied crypto</p>
         </div>
 
-        <StepIndicator currentStep={currentStep} totalSteps={3} />
+        <StepRail current={currentStep} />
 
         <AnimatePresence mode="wait">
-          {/* Step 1: Generate Seed Phrase */}
+          {/* Step 1 */}
           {currentStep === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass-effect rounded-2xl p-8"
-            >
-              <h2 className="text-xl font-semibold mb-4">Your Recovery Phrase</h2>
-              <p className="text-gray-400 mb-6">
-                This 12-word phrase is your master key. Write it down and store it safely offline.
-                Never share it with anyone.
+            <motion.div key="step1" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.4, ease }} className="panel rounded-3xl p-7 sm:p-8">
+              <div className="flex items-center gap-3 mb-2">
+                <KeyRound className="w-5 h-5 text-gold-300" />
+                <h2 className="font-display text-2xl font-bold">Recovery phrase</h2>
+              </div>
+              <p className="text-sm text-ink-dim mb-6 leading-relaxed">
+                These 12 words are your master key. Write them down, store them offline, and never share them with anyone.
               </p>
-              
+
               {loading ? (
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <div
-                      key={i}
-                      className="bg-dark-card p-4 rounded-lg border border-dark-border animate-pulse"
-                    >
-                      <div className="h-4 bg-gray-600 rounded"></div>
-                    </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-6">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border border-white/6 bg-white/[0.02] p-3.5 animate-pulse"><div className="h-4 bg-white/5 rounded" /></div>
                   ))}
                 </div>
               ) : mnemonic.length > 0 ? (
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-6">
                   {mnemonic.map((word, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-dark-card p-4 rounded-lg border border-dark-border text-center hover:border-primary-500 transition-colors"
+                      initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.05 }}
+                      className="rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5 flex items-center gap-2 hover:border-gold-500/40 transition-colors"
                     >
-                      <span className="text-xs text-gray-500 block">{index + 1}</span>
-                      <span className="font-mono font-medium">{word}</span>
+                      <span className="font-mono text-[0.6rem] text-ink-faint w-4">{index + 1}</span>
+                      <span className="font-mono text-sm font-medium">{word}</span>
                     </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-400 mb-4">Click the button below to generate your recovery phrase</p>
+                <div className="text-center py-12 rounded-2xl border border-dashed border-white/10 mb-6">
+                  <Shield className="w-7 h-7 text-ink-faint mx-auto mb-3" />
+                  <p className="text-sm text-ink-dim">Generate a fresh, cryptographically-secure phrase</p>
                 </div>
               )}
 
               {mnemonic.length > 0 && (
-                <div className="flex gap-3 mb-6">
-                  <button
-                    onClick={copyToClipboard}
-                    className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copied!' : 'Copy'}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <button onClick={copyToClipboard} className="btn-ghost rounded-xl py-3 text-sm font-medium flex items-center justify-center gap-2">
+                    {copied ? <Check className="w-4 h-4 text-up" /> : <Copy className="w-4 h-4" />} {copied ? 'Copied' : 'Copy'}
                   </button>
-                  <button
-                    onClick={downloadMnemonic}
-                    className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
+                  <button onClick={downloadMnemonic} className="btn-ghost rounded-xl py-3 text-sm font-medium flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" /> Download
                   </button>
                 </div>
               )}
 
-              <button
-                onClick={nextStep}
-                disabled={loading}
-                className="w-full py-4 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors"
-              >
-                {loading ? 'Generating...' : mnemonic.length > 0 ? 'Continue' : 'Generate Wallet'}
+              <button onClick={nextStep} disabled={loading} className="btn-gold w-full rounded-xl py-4 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {loading ? 'Generating…' : mnemonic.length > 0 ? <>Continue <ArrowRight className="w-4 h-4" /></> : 'Generate phrase'}
               </button>
             </motion.div>
           )}
 
-          {/* Step 2: Set Password */}
+          {/* Step 2 */}
           {currentStep === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass-effect rounded-2xl p-8"
-            >
-              <h2 className="text-xl font-semibold mb-4">Set Password</h2>
-              <p className="text-gray-400 mb-6">
-                Choose a strong password to encrypt your wallet locally in your browser.
-              </p>
-              
+            <motion.div key="step2" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.4, ease }} className="panel rounded-3xl p-7 sm:p-8">
+              <div className="flex items-center gap-3 mb-2">
+                <Shield className="w-5 h-5 text-gold-300" />
+                <h2 className="font-display text-2xl font-bold">Seal it</h2>
+              </div>
+              <p className="text-sm text-ink-dim mb-6">Choose a strong password to encrypt your vault locally with AES-256.</p>
+
               <div className="space-y-4">
                 <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-4 bg-dark-card border border-dark-border rounded-xl focus:border-primary-500 focus:outline-none transition-colors pr-12"
-                    placeholder="Enter password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
-                  >
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="field px-4 py-3.5 pr-12" placeholder="Enter password" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink transition-colors">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full p-4 bg-dark-card border border-dark-border rounded-xl focus:border-primary-500 focus:outline-none transition-colors"
-                    placeholder="Confirm password"
-                  />
-                </div>
-                
+                <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="field px-4 py-3.5" placeholder="Confirm password" />
+
                 {password && (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-300 ${
-                            passwordStrength.score <= 2
-                              ? 'bg-red-500'
-                              : passwordStrength.score <= 4
-                              ? 'bg-yellow-500'
-                              : 'bg-green-500'
-                          }`}
-                          style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
-                        />
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                        <div className={`h-full ${strengthColor} rounded-full transition-all duration-300`} style={{ width: `${(passwordStrength.score / 6) * 100}%` }} />
                       </div>
-                      <span
-                        className={`text-sm font-medium ${
-                          passwordStrength.score <= 2
-                            ? 'text-red-500'
-                            : passwordStrength.score <= 4
-                            ? 'text-yellow-500'
-                            : 'text-green-500'
-                        }`}
-                      >
-                        {passwordStrength.score <= 2 ? 'Weak' : passwordStrength.score <= 4 ? 'Medium' : 'Strong'}
-                      </span>
+                      <span className={`mono-label text-[0.55rem] ${strengthText}`}>{strengthLabel}</span>
                     </div>
-                    <p className="text-sm text-gray-400">{passwordStrength.feedback}</p>
-                    {confirmPassword && password !== confirmPassword && (
-                      <p className="text-sm text-red-400">Passwords do not match</p>
-                    )}
+                    <p className="text-xs text-ink-faint">{passwordStrength.feedback}</p>
+                    {confirmPassword && password !== confirmPassword && <p className="text-xs text-down">Passwords do not match</p>}
                   </div>
                 )}
               </div>
 
               <div className="flex gap-3 mt-8">
-                <button
-                  onClick={previousStep}
-                  className="px-6 py-3 border border-gray-600 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={nextStep}
-                  disabled={!isStep2Valid}
-                  className="flex-1 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
-                >
-                  Continue
+                <button onClick={previousStep} className="btn-ghost rounded-xl px-6 py-3.5 font-medium">Back</button>
+                <button onClick={nextStep} disabled={!isStep2Valid} className="btn-gold flex-1 rounded-xl py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* Step 3: Confirm Backup */}
+          {/* Step 3 */}
           {currentStep === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass-effect rounded-2xl p-8"
-            >
-              <h2 className="text-xl font-semibold mb-4">Confirm Backup</h2>
-              <p className="text-gray-400 mb-6">
-                Please confirm that you have safely backed up your recovery phrase.
-              </p>
-              
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
-                <div className="flex items-start space-x-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-amber-400 mb-1">Important Warning</h3>
-                    <p className="text-sm text-amber-200">
-                      If you lose your recovery phrase, you will permanently lose access to your wallet and funds. 
-                      There is no way to recover them.
-                    </p>
-                  </div>
+            <motion.div key="step3" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.4, ease }} className="panel rounded-3xl p-7 sm:p-8">
+              <div className="flex items-center gap-3 mb-2">
+                <Check className="w-5 h-5 text-gold-300" />
+                <h2 className="font-display text-2xl font-bold">Confirm backup</h2>
+              </div>
+              <p className="text-sm text-ink-dim mb-6">Confirm you've safely stored your recovery phrase.</p>
+
+              <div className="rounded-2xl border border-down/25 bg-down/[0.07] p-4 mb-6 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-down mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-down mb-1 text-sm">No recovery, no exceptions</h3>
+                  <p className="text-xs text-down/80 leading-relaxed">If you lose your recovery phrase, your funds are gone forever. There is no reset, no support line, no backdoor.</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={confirmations.writtenDown}
-                    onChange={(e) =>
-                      setConfirmations({ ...confirmations, writtenDown: e.target.checked })
-                    }
-                    className="mt-1 w-4 h-4 text-primary-500 rounded border-gray-600 bg-dark-card focus:ring-primary-500"
-                  />
-                  <span className="text-sm">
-                    I have written down my 12-word recovery phrase and stored it in a safe place.
-                  </span>
-                </label>
-                
-                <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={confirmations.understood}
-                    onChange={(e) =>
-                      setConfirmations({ ...confirmations, understood: e.target.checked })
-                    }
-                    className="mt-1 w-4 h-4 text-primary-500 rounded border-gray-600 bg-dark-card focus:ring-primary-500"
-                  />
-                  <span className="text-sm">
-                    I understand that if I lose my recovery phrase, I will lose access to my wallet forever.
-                  </span>
-                </label>
+              <div className="space-y-3">
+                {[
+                  { key: 'writtenDown', label: 'I have written down my 12-word recovery phrase and stored it safely offline.' },
+                  { key: 'understood', label: 'I understand that losing my phrase means losing access to my wallet forever.' },
+                ].map((c) => {
+                  const checked = confirmations[c.key as keyof typeof confirmations]
+                  return (
+                    <label key={c.key} className="flex items-start gap-3 cursor-pointer rounded-2xl border border-white/8 bg-white/[0.015] p-4 hover:border-white/15 transition-colors">
+                      <span className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${checked ? 'bg-gold-sheen' : 'border border-white/20'}`}>
+                        {checked && <Check className="w-3.5 h-3.5 text-[#1a1408]" />}
+                      </span>
+                      <input type="checkbox" checked={checked} onChange={(e) => setConfirmations({ ...confirmations, [c.key]: e.target.checked })} className="sr-only" />
+                      <span className="text-sm text-ink-dim">{c.label}</span>
+                    </label>
+                  )
+                })}
               </div>
 
               <div className="flex gap-3 mt-8">
-                <button
-                  onClick={previousStep}
-                  className="px-6 py-3 border border-gray-600 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={finishWalletCreation}
-                  disabled={!isStep3Valid || loading}
-                  className="flex-1 py-3 bg-accent-green hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
-                >
-                  {loading ? 'Creating Wallet...' : 'Create Wallet'}
+                <button onClick={previousStep} className="btn-ghost rounded-xl px-6 py-3.5 font-medium">Back</button>
+                <button onClick={finishWalletCreation} disabled={!isStep3Valid || loading} className="btn-gold flex-1 rounded-xl py-3.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  {loading ? 'Creating vault…' : <>Open my vault <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </div>
             </motion.div>

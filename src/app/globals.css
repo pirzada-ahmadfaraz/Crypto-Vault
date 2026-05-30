@@ -2,84 +2,180 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   CryptoVault — "Precision Instrument"
+   Molten gold on warm obsidian. Machined hairline surfaces.
+   ============================================================ */
+
 @layer base {
   :root {
-    --background: 5 5 5;
-    --foreground: 229 229 229;
+    --background: 11 10 8;
+    --foreground: 245 241 232;
+  }
+
+  * {
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  body {
+    @apply bg-obsidian text-ink min-h-screen;
+    font-feature-settings: "ss01", "cv01", "tnum";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+  }
+
+  ::selection {
+    background: rgba(207, 155, 53, 0.28);
+    color: #fff;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0b0a08;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #26221a;
+    border-radius: 999px;
+    border: 2px solid #0b0a08;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a3326;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #26221a #0b0a08;
   }
 }
 
-body {
-  @apply bg-obsidian text-dark-text min-h-screen selection:bg-primary-500/30 selection:text-white;
-  font-feature-settings: "rlig" 1, "calt" 1;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-charcoal;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-charcoal-light rounded-full border border-charcoal hover:bg-neutral-700 transition-colors;
-}
-
-/* Utilities */
 @layer components {
-  .glass-panel {
-    @apply bg-charcoal/40 backdrop-blur-xl border border-white/5 shadow-glass;
-  }
-  
-  .glass-panel-hover {
-    @apply hover:bg-charcoal/60 hover:border-white/10 transition-all duration-300;
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-neon-purple to-neon-pink;
+  /* Machined surface */
+  .panel {
+    background-color: #100e0b;
+    background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 38%, rgba(0, 0, 0, 0) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+      0 30px 60px -34px rgba(0, 0, 0, 0.95);
   }
 
-  .neon-border {
+  .panel-hover {
+    transition: border-color 0.5s ease, background-color 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .panel-hover:hover {
+    border-color: rgba(207, 155, 53, 0.32);
+  }
+
+  /* Frosted overlay (modals) */
+  .frost {
+    background-color: rgba(16, 14, 11, 0.86);
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  /* Instrument micro-label */
+  .mono-label {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-weight: 500;
+  }
+
+  /* Gold gradient text */
+  .gold-text {
+    background: linear-gradient(180deg, #f9ecc9 0%, #e0b455 58%, #b27f26 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Primary gold button with sheen */
+  .btn-gold {
     position: relative;
-    z-index: 0;
     overflow: hidden;
+    background: linear-gradient(135deg, #f4dca0 0%, #cf9b35 48%, #b27f26 100%);
+    color: #1a1408;
+    box-shadow: 0 10px 30px -10px rgba(207, 155, 53, 0.5);
+    transition: filter 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-
-  .neon-border::before {
-    content: '';
+  .btn-gold:hover {
+    filter: brightness(1.07);
+  }
+  .btn-gold::after {
+    content: "";
     position: absolute;
-    z-index: -1;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    transform: translate(-50%, -50%);
-    background: conic-gradient(transparent 270deg, #0ea5e9, transparent); 
-    animation: rotate 4s linear infinite;
+    top: 0;
+    bottom: 0;
+    width: 35%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: btnSheen 5s ease-in-out infinite;
   }
-  
-  .neon-border::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: 1px;
-    @apply bg-charcoal rounded-[inherit];
+  @keyframes btnSheen {
+    0%, 100% { transform: translateX(-160%) skewX(-18deg); }
+    55% { transform: translateX(360%) skewX(-18deg); }
+  }
+
+  /* Ghost / secondary button */
+  .btn-ghost {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    color: #d8d2c8;
+    transition: all 0.3s ease;
+  }
+  .btn-ghost:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+  }
+
+  /* Form field */
+  .field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 0.85rem;
+    color: #f5f1e8;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+  .field::placeholder {
+    color: #5b554c;
+  }
+  .field:focus {
+    outline: none;
+    border-color: rgba(207, 155, 53, 0.5);
+    background: rgba(207, 155, 53, 0.04);
   }
 }
 
-@keyframes rotate {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+/* Film grain */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Global Animations */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* Hairline grid backdrop */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 56px 56px;
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
